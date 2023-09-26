@@ -1,7 +1,18 @@
 import bcrypt from "bcrypt";
 import nodemailer, { Transporter } from "nodemailer";
 
-export function getResponseTemplate(): object {
+export interface ResponseTemplate {
+  meta: {
+    error: {
+      code: number | null;
+      message: string | null;
+    } | null;
+    status: number;
+  };
+  data: Record<string, unknown>;
+}
+
+export function getResponseTemplate(): ResponseTemplate {
   return {
     meta: {
       error: null,

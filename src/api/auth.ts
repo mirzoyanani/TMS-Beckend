@@ -1,8 +1,8 @@
 import { Router } from "express";
-// import { getUser } from "../controllers/auth.js";
+import { registerController } from "../controllers/auth.js";
+import validator from "../middlewares/validator/index.js";
+const router: Router = Router();
 
-const router = Router();
-
-// router.get("/register", getUser);
+router.post("/register", validator("register"), registerController);
 
 export default router;
