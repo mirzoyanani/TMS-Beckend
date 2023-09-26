@@ -10,6 +10,7 @@ const validationSchemas: ValidationSchemas = {
     surname: joi.string().required(),
     email: joi.string().email().lowercase().required(),
     password: joi.string().min(8).max(16).required(),
+    telephone: joi.string().required(),
   }),
   reset_password: joi.object({
     password: joi.string().min(8).max(16).required(),
