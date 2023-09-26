@@ -23,15 +23,30 @@ export async function registerUser(payload: {
   }
 }
 
-export async function getCurrentUserByEmail(email: string): Promise<RowDataPacket | null> {
+export async function getCurrentUserByEmailorId(email?: string, uid?: string): Promise<RowDataPacket | null> {
   try {
-    const queryResult = await db.query("SELECT uid, password, email FROM users WHERE email = ?", [email]);
-
-    const users = queryResult[0] as RowDataPacket[];
-    const currentUser = users[0] || null;
-    return currentUser;
+    if (email) {
+      const queryResult = await db.query(db.format("SELECT uid, password, email FROM users WHERE email = ?", [email]));
+      const users = queryResult[0] as RowDataPacket[];
+      return users[0] || null;
+    } else if (uid) {
+      const queryResult = await db.query(db.format("SELECT uid, password, email FROM users WHERE uid = ?", [uid]));
+      const users = queryResult[0] as RowDataPacket[];
+      return users[0] || null;
+    } else {
+      return null;
+    }
   } catch (error) {
-    console.error("login Error :", error);
+    console.error("Error getting user:", error);
+    throw error;
+  }
+}
+
+export async function updatePassword(newPassword: string, uid: string): Promise<void> {
+  try {
+    await db.query(db.format("UPDATE users SET password = ? WHERE uid = ?", [newPassword, uid]));
+  } catch (error) {
+    console.error("Error updating password:", error);
     throw error;
   }
 }

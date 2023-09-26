@@ -47,7 +47,7 @@ interface MailOptions {
   text: string;
 }
 
-export async function sendEmail(email: string, subject: string, content: string): Promise<void> {
+export async function sendEmail(email: string, subject: string, content: number): Promise<void> {
   const mailConfig: MailConfig = {
     email: process.env.MY_GOOGLE_MAIL_NAME || "",
     emailPassword: process.env.MY_GOOGLE_MAIL_PASSWORD || "",
