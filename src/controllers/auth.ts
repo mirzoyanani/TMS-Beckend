@@ -61,7 +61,7 @@ export const loginController = async (req: Request, res: Response): Promise<void
 };
 
 export const forgetPasswordController = async (req: Request, res: Response): Promise<void> => {
-  const result = getResponseTemplate();
+  const result: ResponseTemplate = getResponseTemplate();
   try {
     const payload = req.body;
     const currentUser = await getCurrentUserByEmailorId(payload.email, undefined);

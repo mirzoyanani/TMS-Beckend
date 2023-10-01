@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 import auth_router from "./api/auth.js";
+import task_router from "./api/task.js";
 dotenv.config();
 
 interface CorsOptions {
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/images", express.static(path.join(path.resolve(), "images")));
 app.use("/auth", auth_router);
+app.use("/task", task_router);
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);

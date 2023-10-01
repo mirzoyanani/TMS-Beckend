@@ -1,5 +1,6 @@
 import db from "./index.js";
 import { RowDataPacket } from "mysql2/promise";
+
 export async function registerUser(payload: {
   uid: string;
   name: string;

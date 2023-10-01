@@ -19,6 +19,12 @@ const validationSchemas: ValidationSchemas = {
     email: joi.string().required(),
     password: joi.string().required(),
   }),
+  update: joi.object({
+    title: joi.string().required(),
+    description: joi.string().required(),
+    end_date: joi.string().required(),
+    id: joi.number().required(),
+  }),
 };
 
 export default validationSchemas;
