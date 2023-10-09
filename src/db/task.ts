@@ -30,7 +30,7 @@ export async function getTasks(decoded: any, pageNumber: number, pageSize: numbe
       db.format(
         `SELECT * FROM tasks 
           WHERE uid = ?
-          ORDER BY start_date ASC 
+          ORDER BY creation_date ASC 
           LIMIT ? OFFSET ?`,
         [decoded.uid, pageSize, offset],
       ),
@@ -90,5 +90,118 @@ export async function updateTaskStatus(status: "todo" | "in progres" | "done", i
     return `Task status updated to ${status} successfully`;
   } catch (error) {
     console.log(error);
+  }
+}
+
+export async function filterTasksbyStatus(
+  decoded: any,
+  pageNumber: number,
+  pageSize: number,
+  status: string,
+): Promise<TaskData> {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    const [dataResult] = await db.query<RowDataPacket[]>(
+      db.format(
+        `SELECT * FROM tasks 
+                WHERE uid = ? AND status = ?
+                ORDER BY creation_date ASC 
+                LIMIT ? OFFSET ?`,
+        [decoded.uid, status, pageSize, offset],
+      ),
+    );
+
+    const [totalCountResult]: any = await db.query(
+      db.format(
+        `SELECT COUNT(*) as count
+                FROM tasks
+                WHERE uid = ? AND status = ?`,
+        [decoded.uid, status],
+      ),
+    );
+
+    const tasks = dataResult;
+    const totalCount = totalCountResult[0].count;
+
+    return { tasks, totalCount };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function filterTasksbyDate(
+  decoded: any,
+  pageNumber: number,
+  pageSize: number,
+  date: "creation_date" | "end_date",
+): Promise<TaskData | undefined> {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    if (date == "creation_date") {
+      const [dataResult] = await db.query<RowDataPacket[]>(
+        db.format(
+          `SELECT * FROM tasks 
+                        WHERE uid = ? 
+                        ORDER BY creation_date ASC 
+                        LIMIT ? OFFSET ?`,
+          [decoded.uid, pageSize, offset],
+        ),
+      );
+
+      const [totalCountResult]: any = await db.query(
+        db.format(
+          `SELECT COUNT(*) as count
+                        FROM tasks
+                        WHERE uid = ? `,
+          [decoded.uid],
+        ),
+      );
+
+      const tasks = dataResult;
+      const totalCount = totalCountResult[0].count;
+      return { tasks, totalCount };
+    } else if (date == "end_date") {
+      const [dataResult] = await db.query<RowDataPacket[]>(
+        db.format(
+          `SELECT * FROM tasks 
+                        WHERE uid = ? 
+                        ORDER BY end_date DESC 
+                        LIMIT ? OFFSET ?`,
+          [decoded.uid, pageSize, offset],
+        ),
+      );
+
+      const [totalCountResult]: any = await db.query(
+        db.format(
+          `SELECT COUNT(*) as count
+                        FROM tasks
+                        WHERE uid = ?`,
+          [decoded.uid],
+        ),
+      );
+
+      const tasks = dataResult;
+      const totalCount = totalCountResult[0].count;
+      return { tasks, totalCount };
+    }
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+export async function getTasksByTitle(decoded: any, title: string): Promise<object> {
+  try {
+    const dataResult = await db.query<RowDataPacket[]>(
+      db.format(
+        `SELECT * FROM tasks 
+            WHERE uid = ? AND title LIKE ? `,
+        [decoded.uid, `%${title}%`],
+      ),
+    );
+    return dataResult[0];
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 }

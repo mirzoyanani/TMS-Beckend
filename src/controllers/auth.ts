@@ -67,7 +67,7 @@ export const forgetPasswordController = async (req: Request, res: Response): Pro
     const currentUser = await getCurrentUserByEmailorId(payload.email, undefined);
 
     if (!currentUser) {
-      throw { status: 401, message: "Not recognized user" };
+      throw { status: 401, message: "Այսպիսի օգտատեր գոյություն չունի" };
     }
 
     const randomCode = Math.floor(Math.random() * (100000 - 999999 + 1)) + 999999;

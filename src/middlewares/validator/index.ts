@@ -6,7 +6,6 @@ const validator = (type: string) => (req: Request, res: Response, next: NextFunc
   if (type in validationSchemas) {
     const validationResult = validationSchemas[type].validate(req.body);
     if (validationResult.error) {
-      console.log(validationResult.error);
       res.status(_VALIDATION_ERROR_.status).json({
         meta: {
           error: { code: _VALIDATION_ERROR_.code, message: _VALIDATION_ERROR_.message },
