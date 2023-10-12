@@ -1,21 +1,15 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { getResponseTemplate } from "../lib/index.js";
 import { ResponseTemplate } from "../lib/index.js";
-import jwt from "jsonwebtoken";
-import { _TOKEN_IS_WRONG_ } from "../helpers/err-codes.js";
 import { getStatistics } from "../db/statistics.js";
-export const getTasksStatusController = async (req: Request, res: Response) => {
+import { CustomRequest } from "../lib/index.js";
+export const getTasksStatusController = async (req: CustomRequest, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
-    const { token } = req.headers;
-    if (!token) {
-      throw _TOKEN_IS_WRONG_;
-    }
-    const decoded: any = jwt.verify(token as string, process.env.SECRET_KEY as string);
-
-    const data = await getStatistics(decoded);
+    const data = await getStatistics(req.decoded);
 
     result.data.items = data.statuses;
+    result.data.statusCounts = data.dataCount;
   } catch (err: any) {
     result.meta.error = {
       code: err.code || err.errCode || 500,

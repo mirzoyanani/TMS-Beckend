@@ -1,5 +1,6 @@
 import db from "./index.js";
 import { RowDataPacket } from "mysql2/promise";
+type TaskStatus = "todo" | "in progres" | "done";
 
 export async function insertTask(decoded: any, payload: any): Promise<string> {
   try {
@@ -84,7 +85,7 @@ export async function updateTask(
     throw error;
   }
 }
-export async function updateTaskStatus(status: "todo" | "in progres" | "done", id: number) {
+export async function updateTaskStatus(status: TaskStatus, id: number) {
   try {
     await db.query("UPDATE tasks SET  status = ? WHERE id = ?", [status, id]);
     return `Task status updated to ${status} successfully`;
@@ -190,16 +191,33 @@ export async function filterTasksbyDate(
     throw error;
   }
 }
-export async function getTasksByTitle(decoded: any, title: string): Promise<object> {
+export async function getTasksByTitle(
+  decoded: any,
+  pageNumber: number,
+  pageSize: number,
+  title: string,
+): Promise<TaskData> {
+  const offset = (pageNumber - 1) * pageSize;
   try {
-    const dataResult = await db.query<RowDataPacket[]>(
+    const [dataResult] = await db.query<RowDataPacket[]>(
       db.format(
         `SELECT * FROM tasks 
-            WHERE uid = ? AND title LIKE ? `,
+            WHERE uid = ? AND title LIKE ?
+            LIMIT ? OFFSET ? `,
+        [decoded.uid, `%${title}%`, pageSize, offset],
+      ),
+    );
+    const [totalCountResult]: any = await db.query(
+      db.format(
+        `SELECT COUNT(*) as count
+                      FROM tasks
+                      WHERE uid = ? AND  title LIKE ? `,
         [decoded.uid, `%${title}%`],
       ),
     );
-    return dataResult[0];
+    const tasks = dataResult;
+    const totalCount = totalCountResult[0].count;
+    return { tasks, totalCount };
   } catch (error) {
     console.log(error);
     throw error;

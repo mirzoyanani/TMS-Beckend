@@ -1,19 +1,13 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { getResponseTemplate } from "../lib/index.js";
 import { ResponseTemplate } from "../lib/index.js";
-import jwt from "jsonwebtoken";
-import { _TOKEN_IS_WRONG_ } from "../helpers/err-codes.js";
+import { CustomRequest } from "../lib/index.js";
 import { getUserInfo } from "../db/user.js";
 
-export const getUserInfoController = async (req: Request, res: Response) => {
+export const getUserInfoController = async (req: CustomRequest, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
-    const { token } = req.headers;
-    if (!token) {
-      throw _TOKEN_IS_WRONG_;
-    }
-    const decoded: any = jwt.verify(token as string, process.env.SECRET_KEY as string);
-    const data = await getUserInfo(decoded);
+    const data = await getUserInfo(req.decoded);
     result.data = { data };
   } catch (err: any) {
     result.meta.error = {

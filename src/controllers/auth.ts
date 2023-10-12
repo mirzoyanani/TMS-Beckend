@@ -1,11 +1,17 @@
 import { getResponseTemplate, ResponseTemplate, hashingString, sendEmail } from "../lib/index.js";
 import { v4 as uuid } from "uuid";
-// import db from "../db/index.js";
 import { Request, Response } from "express";
-import { _WRONG_LOGIN_OR_PASSWORD, _TOKEN_IS_WRONG_, _RESET_CODE_IS_WRONG_ } from "../helpers/err-codes.js";
+import {
+  _WRONG_LOGIN_OR_PASSWORD,
+  _RESET_CODE_IS_WRONG_,
+  _USER_NOT_FOUND_,
+  _WRONG_TELEPHONE_NUMBER_,
+} from "../helpers/err-codes.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { registerUser, getCurrentUserByEmailorId, updatePassword } from "../db/auth.js";
+import { CustomRequest } from "../lib/index.js";
+import { isValidPhoneNumber } from "../lib/index.js";
 
 export const registerController = async (req: Request, res: Response): Promise<void> => {
   const result: ResponseTemplate = getResponseTemplate();
@@ -14,6 +20,9 @@ export const registerController = async (req: Request, res: Response): Promise<v
     payload.uid = uuid();
     payload.img = req.file?.filename;
     payload.password = await hashingString(payload.password);
+    if (!isValidPhoneNumber(payload.telephone)) {
+      throw _WRONG_TELEPHONE_NUMBER_;
+    }
     registerUser(payload);
     result.data.message = "User registered successfully";
   } catch (err: any) {
@@ -23,7 +32,6 @@ export const registerController = async (req: Request, res: Response): Promise<v
     };
     result.meta.status = err.status || 500;
   }
-
   res.status(result.meta.status).json(result);
 };
 
@@ -67,7 +75,7 @@ export const forgetPasswordController = async (req: Request, res: Response): Pro
     const currentUser = await getCurrentUserByEmailorId(payload.email, undefined);
 
     if (!currentUser) {
-      throw { status: 401, message: "Այսպիսի օգտատեր գոյություն չունի" };
+      throw _USER_NOT_FOUND_;
     }
 
     const randomCode = Math.floor(Math.random() * (100000 - 999999 + 1)) + 999999;
@@ -95,24 +103,22 @@ export const forgetPasswordController = async (req: Request, res: Response): Pro
   }
   res.status(result.meta.status).json(result);
 };
-export const checkCodeController = async (req: Request, res: Response): Promise<void> => {
+
+export const checkCodeController = async (req: CustomRequest, res: Response): Promise<void> => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
-    const { token } = req.headers;
-    if (!token) {
-      throw _TOKEN_IS_WRONG_;
-    }
-
     const { code } = req.body;
 
-    const decoded: any = jwt.verify(token as string, process.env.SECRET_KEY as string);
+    if (!req.decoded || !req.decoded.code) {
+      throw new Error("Սխալ հարցում");
+    }
 
-    const compared = await bcrypt.compare(code, decoded.code);
+    const compared = await bcrypt.compare(code, req.decoded.code);
 
     if (!compared) {
       throw _RESET_CODE_IS_WRONG_;
     }
-    const currentUser = await getCurrentUserByEmailorId(undefined, decoded.uid);
+    const currentUser = await getCurrentUserByEmailorId(undefined, req.decoded.uid);
 
     if (!currentUser) {
       throw { status: 406, message: "Wrong params" };
@@ -138,18 +144,15 @@ export const checkCodeController = async (req: Request, res: Response): Promise<
   res.status(result.meta.status).json(result);
 };
 
-export const resetPasswordController = async (req: Request, res: Response): Promise<void> => {
+export const resetPasswordController = async (req: CustomRequest, res: Response): Promise<void> => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
-    const token = req.headers.token;
-    if (!token) {
-      throw _TOKEN_IS_WRONG_;
+    if (!req.decoded || !req.decoded) {
+      throw new Error("Սխալ հարցում");
     }
 
-    const decoded: any = jwt.verify(token as string, process.env.SECRET_KEY as string);
-
     const newPassword = await hashingString(req.body.password);
-    updatePassword(newPassword, decoded.uid);
+    updatePassword(newPassword, req.decoded.uid);
 
     result.data.message = "Request has ended successfully";
   } catch (err: any) {

@@ -19,8 +19,7 @@ export async function registerUser(payload: {
       ),
     );
   } catch (error) {
-    console.error("Error registering user:", error);
-    throw error;
+    throw new Error("User registration failed: " + (error as Error).message);
   }
 }
 

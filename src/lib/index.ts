@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import nodemailer, { Transporter } from "nodemailer";
+import { Request } from "express";
 
 export interface ResponseTemplate {
   meta: {
@@ -69,3 +70,15 @@ export async function sendEmail(email: string, subject: string, content: number)
   };
   await transporter.sendMail(mailOptions);
 }
+
+export interface CustomRequest extends Request {
+  decoded?: {
+    code: string;
+    uid: string;
+  };
+}
+
+export const isValidPhoneNumber = (phoneNumber: string): boolean => {
+  const phoneNumberPattern: RegExp = /^\+374 \d{6}$/;
+  return phoneNumberPattern.test(phoneNumber);
+};
