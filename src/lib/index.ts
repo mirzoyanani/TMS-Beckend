@@ -48,7 +48,7 @@ interface MailOptions {
   text: string;
 }
 
-export async function sendEmail(email: string, subject: string, content: number): Promise<void> {
+export async function sendEmail(email: string, subject: string, content: number | string): Promise<void> {
   const mailConfig: MailConfig = {
     email: process.env.MY_GOOGLE_MAIL_NAME || "",
     emailPassword: process.env.MY_GOOGLE_MAIL_PASSWORD || "",
@@ -66,8 +66,9 @@ export async function sendEmail(email: string, subject: string, content: number)
     from: mailConfig.email,
     to: email,
     subject,
-    text: content + " - is your TMS verification code.",
+    text: content + " ",
   };
+
   await transporter.sendMail(mailOptions);
 }
 
@@ -79,6 +80,6 @@ export interface CustomRequest extends Request {
 }
 
 export const isValidPhoneNumber = (phoneNumber: string): boolean => {
-  const phoneNumberPattern: RegExp = /^\+374 \d{6}$/;
+  const phoneNumberPattern: RegExp = /^\+374 \d{8}$/;
   return phoneNumberPattern.test(phoneNumber);
 };

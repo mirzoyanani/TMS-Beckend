@@ -9,7 +9,7 @@ import {
 } from "../helpers/err-codes.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { registerUser, getCurrentUserByEmailorId, updatePassword } from "../db/auth.js";
+import { registerUser, getCurrentUserByEmailorId, updatePassword, isEmailInUse } from "../db/auth.js";
 import { CustomRequest } from "../lib/index.js";
 import { isValidPhoneNumber } from "../lib/index.js";
 
@@ -23,7 +23,12 @@ export const registerController = async (req: Request, res: Response): Promise<v
     if (!isValidPhoneNumber(payload.telephone)) {
       throw _WRONG_TELEPHONE_NUMBER_;
     }
-    registerUser(payload);
+    const emailExists = await isEmailInUse(payload.email);
+
+    if (emailExists) {
+      throw new Error("Էլեկտրոնային փոստը արդեն օգտագործվել է");
+    }
+    await registerUser(payload);
     result.data.message = "User registered successfully";
   } catch (err: any) {
     result.meta.error = {

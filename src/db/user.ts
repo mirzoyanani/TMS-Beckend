@@ -12,3 +12,30 @@ export async function getUserInfo(decoded: any): Promise<object> {
     throw error;
   }
 }
+interface UserInfo {
+  name: string;
+  surname: string;
+  profilePicture: string;
+  telephone: string;
+}
+
+export async function updateUserInfo(decoded: any, newUserInfo: UserInfo): Promise<boolean> {
+  try {
+    const { name, surname, profilePicture, telephone } = newUserInfo;
+
+    const updateQuery = db.format("UPDATE users SET name = ?, surname = ?, image = ?, telephone = ? WHERE uid = ?", [
+      name,
+      surname,
+      profilePicture,
+      telephone,
+      decoded.uid,
+    ]);
+
+    await db.query(updateQuery);
+
+    return true;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

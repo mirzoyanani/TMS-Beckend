@@ -7,7 +7,6 @@ export const getTasksStatusController = async (req: CustomRequest, res: Response
   const result: ResponseTemplate = getResponseTemplate();
   try {
     const data = await getStatistics(req.decoded);
-
     result.data.items = data.statuses;
     result.data.statusCounts = data.dataCount;
   } catch (err: any) {

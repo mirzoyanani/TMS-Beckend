@@ -7,8 +7,10 @@ import task_router from "./api/task.js";
 import user_router from "./api/user.js";
 import statistics_router from "./api/statistics.js";
 import { authorize } from "./middlewares/authorization.js";
+import { scheduleTaskEmailNotifications } from "./controllers/notification.js";
+import { getAllTasks } from "./db/task.js";
+import schedule from "node-schedule";
 dotenv.config();
-
 interface CorsOptions {
   origin: string;
   credentials: boolean;
@@ -30,6 +32,22 @@ app.use("/auth", auth_router);
 app.use("/task", authorize, task_router);
 app.use("/user", user_router);
 app.use("/statistics", statistics_router);
+
+async function main() {
+  try {
+    const tasks = await getAllTasks();
+    scheduleTaskEmailNotifications(tasks);
+
+    schedule.scheduleJob("* * * * *", async () => {
+      const updatedTasks = await getAllTasks();
+      scheduleTaskEmailNotifications(updatedTasks);
+    });
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+main();
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);

@@ -171,6 +171,7 @@ export const getTasksByTitleController = async (req: CustomRequest, res: Respons
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
 
     const data = await getTasksByTitle(req.decoded, page, pageSize, searchValue);
+    result.data.items = { data };
     result.data.items = data.tasks;
     result.data.pagination = {
       currentPage: page,

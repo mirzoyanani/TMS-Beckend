@@ -50,3 +50,15 @@ export async function updatePassword(newPassword: string, uid: string): Promise<
     throw error;
   }
 }
+
+export async function isEmailInUse(email: string): Promise<boolean> {
+  try {
+    const result = await db.query(db.format("SELECT COUNT(*) as count FROM users WHERE email = ?", [email]));
+
+    const count = result[0] as RowDataPacket[];
+    return count[0].count;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

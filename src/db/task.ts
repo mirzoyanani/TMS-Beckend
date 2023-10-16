@@ -29,9 +29,14 @@ export async function getTasks(decoded: any, pageNumber: number, pageSize: numbe
 
     const [dataResult] = await db.query<RowDataPacket[]>(
       db.format(
-        `SELECT * FROM tasks 
+        `SELECT  id,
+        title,
+        description,
+        status,
+        creation_date,
+        end_date FROM tasks 
           WHERE uid = ?
-          ORDER BY creation_date ASC 
+          ORDER BY creation_date DESC
           LIMIT ? OFFSET ?`,
         [decoded.uid, pageSize, offset],
       ),
@@ -106,7 +111,7 @@ export async function filterTasksbyStatus(
       db.format(
         `SELECT * FROM tasks 
                 WHERE uid = ? AND status = ?
-                ORDER BY creation_date ASC 
+                ORDER BY creation_date DESC
                 LIMIT ? OFFSET ?`,
         [decoded.uid, status, pageSize, offset],
       ),
@@ -218,6 +223,32 @@ export async function getTasksByTitle(
     const tasks = dataResult;
     const totalCount = totalCountResult[0].count;
     return { tasks, totalCount };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+interface Task {
+  email: string;
+  title: string;
+  end_date: string;
+}
+
+export async function getAllTasks(): Promise<Task[]> {
+  try {
+    const [dataResult] = await db.query<RowDataPacket[]>(
+      `SELECT users.email, tasks.title, tasks.end_date
+      FROM users
+      JOIN tasks ON users.uid = tasks.uid;`,
+    );
+
+    const tasks: Task[] = dataResult.map((row) => ({
+      email: row.email,
+      title: row.title,
+      end_date: row.end_date,
+    }));
+    return tasks;
   } catch (error) {
     console.log(error);
     throw error;

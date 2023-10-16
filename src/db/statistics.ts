@@ -25,8 +25,6 @@ export async function getStatistics(decoded: any): Promise<StatusesData> {
       ),
     );
 
-    console.log(dataCount);
-
     const statuses = dataResult;
 
     return { statuses, dataCount };
