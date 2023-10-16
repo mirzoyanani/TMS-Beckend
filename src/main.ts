@@ -39,8 +39,8 @@ async function main() {
     scheduleTaskEmailNotifications(tasks);
 
     schedule.scheduleJob("* * * * *", async () => {
-      const updatedTasks = await getAllTasks();
-      scheduleTaskEmailNotifications(updatedTasks);
+      // const updatedTasks = await getAllTasks();
+      // scheduleTaskEmailNotifications(updatedTasks);
     });
   } catch (error) {
     console.error("Error:", error);
