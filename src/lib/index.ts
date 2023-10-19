@@ -83,3 +83,13 @@ export const isValidPhoneNumber = (phoneNumber: string): boolean => {
   const phoneNumberPattern: RegExp = /^\+374 \d{8}$/;
   return phoneNumberPattern.test(phoneNumber);
 };
+
+export function returnResult(result: ResponseTemplate, data: any, page: number, pageSize: number) {
+  result.data.items = data.tasks;
+  result.data.pagination = {
+    currentPage: page,
+    totalPages: Math.ceil(data.totalCount / pageSize),
+    totalCount: data.totalCount,
+    pageSize: pageSize,
+  };
+}

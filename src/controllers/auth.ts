@@ -6,6 +6,7 @@ import {
   _RESET_CODE_IS_WRONG_,
   _USER_NOT_FOUND_,
   _WRONG_TELEPHONE_NUMBER_,
+  _EMAIL_EXISTS_,
 } from "../helpers/err-codes.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -26,7 +27,7 @@ export const registerController = async (req: Request, res: Response): Promise<v
     const emailExists = await isEmailInUse(payload.email);
 
     if (emailExists) {
-      throw new Error("Էլեկտրոնային փոստը արդեն օգտագործվել է");
+      throw _EMAIL_EXISTS_;
     }
     await registerUser(payload);
     result.data.message = "User registered successfully";
@@ -41,7 +42,7 @@ export const registerController = async (req: Request, res: Response): Promise<v
 };
 
 export const loginController = async (req: Request, res: Response): Promise<void> => {
-  const result: ResponseTemplate = getResponseTemplate(); // Modify this according to your response structure
+  const result: ResponseTemplate = getResponseTemplate();
   try {
     const payload = req.body;
 
@@ -152,7 +153,7 @@ export const checkCodeController = async (req: CustomRequest, res: Response): Pr
 export const resetPasswordController = async (req: CustomRequest, res: Response): Promise<void> => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
-    if (!req.decoded || !req.decoded) {
+    if (!req.decoded) {
       throw new Error("Սխալ հարցում");
     }
 

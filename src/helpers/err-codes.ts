@@ -13,14 +13,16 @@ export const _WRONG_LOGIN_OR_PASSWORD: ErrorMessage = {
   status: 401,
 };
 export const _NOT_AVAILABLE_TO_USER_: ErrorMessage = { code: 4031, message: "Օգտատիրոջը հասանելի չէ", status: 403 };
-export const _RESOURCE_NOT_FOUND_: ErrorMessage = { code: 4041, message: "Հասցեն չի գտնվել", status: 404 };
 export const _TOKEN_IS_WRONG_: ErrorMessage = { code: 4030, message: "Վավերացման ձախողում", status: 403 };
 export const _RESET_CODE_IS_WRONG_: ErrorMessage = { code: 4062, message: "Վավերացման կոդը սխալ է", status: 406 };
-export const _OLD_PASSWORD_IS_WRONG_: ErrorMessage = { code: 4063, message: "Old password is wrong", status: 406 };
-export const _INSUFFICIENT_BALANCE: ErrorMessage = { code: 4041, message: "Անբավարար հաշիվ ", status: 404 };
 export const _USER_NOT_FOUND_: ErrorMessage = {
   code: 4041,
   message: "Այսպիսի օգտատեր գոյություն չունի",
+  status: 404,
+};
+export const _EMAIL_EXISTS_: ErrorMessage = {
+  code: 4041,
+  message: "Էլեկտրոնային փոստը արդեն օգտագործվել է",
   status: 404,
 };
 export const _USER_DOES_NOT_HAVE_ACCESS_: ErrorMessage = {

@@ -22,16 +22,11 @@ export const getUserInfoController = async (req: CustomRequest, res: Response) =
 export const updateUserInfoController = async (req: CustomRequest, res: Response) => {
   const result = getResponseTemplate();
   try {
-    // console.log(4444);
-
-    // const userInfo = await getUserInfo(req.decoded);
     const payload = req.body;
     if (!payload.profilePicture) {
       payload.profilePicture = req.file?.filename;
     }
-
     await updateUserInfo(req.decoded, payload);
-    // res..message = {'Info updated succesfully'}
     res.status(200).json(result);
   } catch (error: any) {
     result.meta.error = {

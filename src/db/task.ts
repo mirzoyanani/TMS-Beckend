@@ -207,8 +207,9 @@ export async function getTasksByTitle(
     const [dataResult] = await db.query<RowDataPacket[]>(
       db.format(
         `SELECT * FROM tasks 
-            WHERE uid = ? AND title LIKE ?
-            LIMIT ? OFFSET ? `,
+         WHERE uid = ? AND title LIKE ?
+         ORDER BY creation_date DESC
+         LIMIT ? OFFSET ?`,
         [decoded.uid, `%${title}%`, pageSize, offset],
       ),
     );
@@ -249,6 +250,46 @@ export async function getAllTasks(): Promise<Task[]> {
       end_date: row.end_date,
     }));
     return tasks;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function filterTasksbyDateController(
+  decoded: any,
+  pageNumber: number,
+  pageSize: number,
+  status: string,
+  searchValue: string,
+  orderBy: string,
+): Promise<TaskData> {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    let query = "SELECT * FROM tasks WHERE uid = ?";
+    const queryParams = [decoded.uid];
+
+    if (status) {
+      query += " AND status = ?";
+      queryParams.push(status);
+    } else if (searchValue) {
+      query += " AND title LIKE ?";
+      queryParams.push(`%${searchValue}%`);
+    }
+    query += " ORDER BY creation_date " + orderBy;
+    query += " LIMIT ? OFFSET ?";
+
+    queryParams.push(pageSize, offset);
+    const [dataResult] = await db.query<RowDataPacket[]>(db.format(query, queryParams));
+
+    const [totalCountResult]: any = await db.query(
+      db.format("SELECT COUNT(*) as count FROM tasks WHERE uid = ?", [decoded.uid]),
+    );
+
+    const tasks = dataResult;
+    const totalCount = totalCountResult[0].count;
+
+    return { tasks, totalCount };
   } catch (error) {
     console.log(error);
     throw error;

@@ -8,10 +8,10 @@ import {
   updateTask,
   updateTaskStatus,
   filterTasksbyStatus,
-  filterTasksbyDate,
+  filterTasksbyDateController,
   getTasksByTitle,
 } from "../db/task.js";
-import { CustomRequest } from "../lib/index.js";
+import { CustomRequest, returnResult } from "../lib/index.js";
 
 export const createTaskController = async (req: CustomRequest, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
@@ -20,30 +20,6 @@ export const createTaskController = async (req: CustomRequest, res: Response) =>
 
     insertTask(req.decoded, payload);
     result.data.message = "Task added successfully";
-  } catch (err: any) {
-    result.meta.error = {
-      code: err.code || err.errCode || 500,
-      message: err.message || err.errMessage || "Unknown Error",
-    };
-    result.meta.status = err.status || err.statusCode || 500;
-  }
-  res.status(result.meta.status).json(result);
-};
-
-export const getTasksController = async (req: CustomRequest, res: Response) => {
-  const result: ResponseTemplate = getResponseTemplate();
-  try {
-    const page = parseInt(req.query.page as string, 10) || 1;
-    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
-    const data = await getTasks(req.decoded, page, pageSize);
-
-    result.data.items = data.tasks;
-    result.data.pagination = {
-      currentPage: page,
-      totalPages: Math.ceil(data.totalCount / pageSize),
-      totalCount: data.totalCount,
-      pageSize,
-    };
   } catch (err: any) {
     result.meta.error = {
       code: err.code || err.errCode || 500,
@@ -108,77 +84,44 @@ export const updateTaskStatusController = async (req: Request, res: Response) =>
   res.status(result.meta.status).json(result);
 };
 
-export const getTasksByStatusController = async (req: CustomRequest, res: Response) => {
+export const getTasksController = async (req: CustomRequest, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
     const page = parseInt(req.query.page as string, 10) || 1;
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    const orderBY = req.query.date as string;
+    const searchValue = req.query.query as string;
     const status = req.query.status as string;
 
-    if (status == "todo" || status == "in progress" || status == "done") {
-      const data = await filterTasksbyStatus(req.decoded, page, pageSize, status);
-      result.data.items = data.tasks;
-      result.data.pagination = {
-        currentPage: page,
-        totalPages: Math.ceil(data.totalCount / pageSize),
-        totalCount: data.totalCount,
-        pageSize,
-      };
-    }
-  } catch (err: any) {
-    result.meta.error = {
-      code: err.code || err.errCode || 500,
-      message: err.message || err.errMessage || "Unknown Error",
-    };
-    result.meta.status = err.status || err.statusCode || 500;
-  }
-  res.status(result.meta.status).json(result);
-};
-export const getTasksByDateController = async (req: CustomRequest, res: Response) => {
-  const result: ResponseTemplate = getResponseTemplate();
-  try {
-    const page = parseInt(req.query.page as string, 10) || 1;
-    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
-    const date = req.query.date as string;
-
-    if (date == "creation_date" || date == "end_date") {
-      const data = await filterTasksbyDate(req.decoded, page, pageSize, date);
-
-      if (data) {
-        result.data.items = data.tasks;
-        result.data.pagination = {
-          currentPage: page,
-          totalPages: Math.ceil(data.totalCount / pageSize),
-          totalCount: data.totalCount,
-          pageSize,
-        };
+    if (status && !orderBY) {
+      if (status == "todo" || status == "in progress" || status == "done") {
+        const data = await filterTasksbyStatus(req.decoded, page, pageSize, status);
+        returnResult(result, data, page, pageSize);
       }
-    }
-  } catch (err: any) {
-    result.meta.error = {
-      code: err.code || err.errCode || 500,
-      message: err.message || err.errMessage || "Unknown Error",
-    };
-    result.meta.status = err.status || err.statusCode || 500;
-  }
-  res.status(result.meta.status).json(result);
-};
-export const getTasksByTitleController = async (req: CustomRequest, res: Response) => {
-  const result: ResponseTemplate = getResponseTemplate();
-  try {
-    const searchValue = req.query.title as string;
-    const page = parseInt(req.query.page as string, 10) || 1;
-    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    } else if (searchValue && !orderBY) {
+      const data = await getTasksByTitle(req.decoded, page, pageSize, searchValue);
 
-    const data = await getTasksByTitle(req.decoded, page, pageSize, searchValue);
-    result.data.items = { data };
-    result.data.items = data.tasks;
-    result.data.pagination = {
-      currentPage: page,
-      totalPages: Math.ceil(data.totalCount / pageSize),
-      totalCount: data.totalCount,
-      pageSize,
-    };
+      returnResult(result, data, page, pageSize);
+    } else if (orderBY) {
+      if (orderBY == "ASC" || orderBY == "DESC") {
+        if (status) {
+          const data = await filterTasksbyDateController(req.decoded, page, pageSize, status, "", orderBY);
+
+          returnResult(result, data, page, pageSize);
+        } else if (searchValue) {
+          const data = await filterTasksbyDateController(req.decoded, page, pageSize, "", searchValue, orderBY);
+
+          returnResult(result, data, page, pageSize);
+        } else {
+          const data = await filterTasksbyDateController(req.decoded, page, pageSize, "", "", orderBY);
+          returnResult(result, data, page, pageSize);
+        }
+      }
+    } else {
+      const data = await getTasks(req.decoded, page, pageSize);
+
+      returnResult(result, data, page, pageSize);
+    }
   } catch (err: any) {
     result.meta.error = {
       code: err.code || err.errCode || 500,
