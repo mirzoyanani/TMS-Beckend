@@ -9,7 +9,7 @@ import {
 import validator from "../middlewares/validator/index.js";
 const router: Router = Router();
 
-router.post("", createTaskController);
+router.post("", validator("task"), createTaskController);
 router.get("", getTasksController);
 router.delete("/:id", deleteTaskController);
 router.put("", validator("update"), updateTaskInfoController);

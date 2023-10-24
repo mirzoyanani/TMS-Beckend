@@ -1,21 +1,23 @@
 import db from "./index.js";
 import { RowDataPacket } from "mysql2/promise";
-
-export async function registerUser(payload: {
-  uid: string;
-  name: string;
-  surname: string;
-  email: string;
-  password: string;
-  telephone: string;
-  img: string;
-}): Promise<void> {
+import { UserInfoDTO } from "../lib/index.js";
+export async function registerUser(payload: UserInfoDTO): Promise<void> {
   try {
     await db.query(
       db.format(
         `INSERT INTO users (uid,name,surname,email,password,image,telephone)
             VALUES (?);`,
-        [[payload.uid, payload.name, payload.surname, payload.email, payload.password, payload.img, payload.telephone]],
+        [
+          [
+            payload.uid,
+            payload.name,
+            payload.surname,
+            payload.email,
+            payload.password,
+            payload.profilePicture,
+            payload.telephone,
+          ],
+        ],
       ),
     );
   } catch (error) {
@@ -37,8 +39,7 @@ export async function getCurrentUserByEmailorId(email?: string, uid?: string): P
       return null;
     }
   } catch (error) {
-    console.error("Error getting user:", error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 
@@ -46,8 +47,7 @@ export async function updatePassword(newPassword: string, uid: string): Promise<
   try {
     await db.query(db.format("UPDATE users SET password = ? WHERE uid = ?", [newPassword, uid]));
   } catch (error) {
-    console.error("Error updating password:", error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 
@@ -58,7 +58,6 @@ export async function isEmailInUse(email: string): Promise<boolean> {
     const count = result[0] as RowDataPacket[];
     return count[0].count;
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }

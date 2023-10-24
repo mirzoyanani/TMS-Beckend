@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import nodemailer, { Transporter } from "nodemailer";
 import { Request } from "express";
+import jwt from "jsonwebtoken";
 
 export interface ResponseTemplate {
   meta: {
@@ -47,6 +48,21 @@ interface MailOptions {
   subject: string;
   text: string;
 }
+export interface UserInfoDTO {
+  uid?: string;
+  name: string;
+  surname: string;
+  email: string;
+  password: string;
+  telephone: string;
+  profilePicture?: string;
+}
+
+export interface TaskCreationDTO {
+  title: string;
+  description: string;
+  end_date: string;
+}
 
 export async function sendEmail(email: string, subject: string, content: number | string): Promise<void> {
   const mailConfig: MailConfig = {
@@ -72,11 +88,13 @@ export async function sendEmail(email: string, subject: string, content: number 
   await transporter.sendMail(mailOptions);
 }
 
-export interface CustomRequest extends Request {
-  decoded?: {
-    code: string;
-    uid: string;
-  };
+export interface CustomRequest<TBody = unknown, TParams = unknown> extends Request<TParams, any, TBody> {
+  decoded?:
+    | {
+        code?: string;
+        uid: string;
+      }
+    | undefined;
 }
 
 export const isValidPhoneNumber = (phoneNumber: string): boolean => {
@@ -92,4 +110,9 @@ export function returnResult(result: ResponseTemplate, data: any, page: number, 
     totalCount: data.totalCount,
     pageSize: pageSize,
   };
+}
+
+export function verifyToken<T extends object = any>(token: string, _secret?: string): T {
+  const secret = _secret ?? (process.env.SECRET_KEY as string);
+  return jwt.verify(token, secret) as T;
 }

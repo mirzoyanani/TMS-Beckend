@@ -1,11 +1,12 @@
 import db from "./index.js";
 import { RowDataPacket } from "mysql2/promise";
-type TaskStatus = "todo" | "in progres" | "done";
+type TaskStatus = "todo" | "in progress" | "done";
+import { TaskCreationDTO } from "../lib/index.js";
 
-export async function insertTask(decoded: any, payload: any): Promise<string> {
+export async function insertTask(uid: string, payload: TaskCreationDTO): Promise<string> {
   try {
     await db.query("INSERT INTO tasks (uid, title, description, end_date) VALUES (?, ?, ?, ?)", [
-      decoded.uid,
+      uid,
       payload.title,
       payload.description,
       payload.end_date,
@@ -13,9 +14,7 @@ export async function insertTask(decoded: any, payload: any): Promise<string> {
 
     return "Task inserted successfully";
   } catch (error) {
-    console.log(error);
-
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 interface TaskData {
@@ -23,7 +22,7 @@ interface TaskData {
   totalCount: number;
 }
 
-export async function getTasks(decoded: any, pageNumber: number, pageSize: number): Promise<TaskData> {
+export async function getTasks(uid: string, pageNumber: number, pageSize: number): Promise<TaskData> {
   try {
     const offset = (pageNumber - 1) * pageSize;
 
@@ -38,16 +37,16 @@ export async function getTasks(decoded: any, pageNumber: number, pageSize: numbe
           WHERE uid = ?
           ORDER BY creation_date DESC
           LIMIT ? OFFSET ?`,
-        [decoded.uid, pageSize, offset],
+        [uid, pageSize, offset],
       ),
     );
 
-    const [totalCountResult]: any = await db.query(
+    const [totalCountResult] = await db.query<RowDataPacket[]>(
       db.format(
         `SELECT COUNT(*) as count
           FROM tasks
           WHERE uid = ?`,
-        [decoded.uid],
+        [uid],
       ),
     );
 
@@ -56,8 +55,7 @@ export async function getTasks(decoded: any, pageNumber: number, pageSize: numbe
 
     return { tasks, totalCount };
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 export async function deleteTask(taskId: number): Promise<string> {
@@ -65,9 +63,7 @@ export async function deleteTask(taskId: number): Promise<string> {
     await db.query("DELETE FROM tasks WHERE id = ?", [taskId]);
     return "Task deleted successfully";
   } catch (error) {
-    console.log(error);
-
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 
@@ -86,8 +82,7 @@ export async function updateTask(
     ]);
     return "Task deleted successfully";
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 export async function updateTaskStatus(status: TaskStatus, id: number) {
@@ -95,12 +90,12 @@ export async function updateTaskStatus(status: TaskStatus, id: number) {
     await db.query("UPDATE tasks SET  status = ? WHERE id = ?", [status, id]);
     return `Task status updated to ${status} successfully`;
   } catch (error) {
-    console.log(error);
+    throw new Error((error as Error).message);
   }
 }
 
 export async function filterTasksbyStatus(
-  decoded: any,
+  uid: string,
   pageNumber: number,
   pageSize: number,
   status: string,
@@ -113,16 +108,16 @@ export async function filterTasksbyStatus(
                 WHERE uid = ? AND status = ?
                 ORDER BY creation_date DESC
                 LIMIT ? OFFSET ?`,
-        [decoded.uid, status, pageSize, offset],
+        [uid, status, pageSize, offset],
       ),
     );
 
-    const [totalCountResult]: any = await db.query(
+    const [totalCountResult] = await db.query<RowDataPacket[]>(
       db.format(
         `SELECT COUNT(*) as count
                 FROM tasks
                 WHERE uid = ? AND status = ?`,
-        [decoded.uid, status],
+        [uid, status],
       ),
     );
 
@@ -131,13 +126,12 @@ export async function filterTasksbyStatus(
 
     return { tasks, totalCount };
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 
 export async function filterTasksbyDate(
-  decoded: any,
+  uid: string,
   pageNumber: number,
   pageSize: number,
   date: "creation_date" | "end_date",
@@ -151,16 +145,16 @@ export async function filterTasksbyDate(
                         WHERE uid = ? 
                         ORDER BY creation_date ASC 
                         LIMIT ? OFFSET ?`,
-          [decoded.uid, pageSize, offset],
+          [uid, pageSize, offset],
         ),
       );
 
-      const [totalCountResult]: any = await db.query(
+      const [totalCountResult] = await db.query<RowDataPacket[]>(
         db.format(
           `SELECT COUNT(*) as count
                         FROM tasks
                         WHERE uid = ? `,
-          [decoded.uid],
+          [uid],
         ),
       );
 
@@ -174,16 +168,16 @@ export async function filterTasksbyDate(
                         WHERE uid = ? 
                         ORDER BY end_date DESC 
                         LIMIT ? OFFSET ?`,
-          [decoded.uid, pageSize, offset],
+          [uid, pageSize, offset],
         ),
       );
 
-      const [totalCountResult]: any = await db.query(
+      const [totalCountResult] = await db.query<RowDataPacket[]>(
         db.format(
           `SELECT COUNT(*) as count
                         FROM tasks
                         WHERE uid = ?`,
-          [decoded.uid],
+          [uid],
         ),
       );
 
@@ -192,12 +186,11 @@ export async function filterTasksbyDate(
       return { tasks, totalCount };
     }
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 export async function getTasksByTitle(
-  decoded: any,
+  uid: string,
   pageNumber: number,
   pageSize: number,
   title: string,
@@ -210,23 +203,22 @@ export async function getTasksByTitle(
          WHERE uid = ? AND title LIKE ?
          ORDER BY creation_date DESC
          LIMIT ? OFFSET ?`,
-        [decoded.uid, `%${title}%`, pageSize, offset],
+        [uid, `%${title}%`, pageSize, offset],
       ),
     );
-    const [totalCountResult]: any = await db.query(
+    const [totalCountResult] = await db.query<RowDataPacket[]>(
       db.format(
         `SELECT COUNT(*) as count
                       FROM tasks
                       WHERE uid = ? AND  title LIKE ? `,
-        [decoded.uid, `%${title}%`],
+        [uid, `%${title}%`],
       ),
     );
     const tasks = dataResult;
     const totalCount = totalCountResult[0].count;
     return { tasks, totalCount };
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 
@@ -251,13 +243,12 @@ export async function getAllTasks(): Promise<Task[]> {
     }));
     return tasks;
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
 
 export async function filterTasksbyDateController(
-  decoded: any,
+  uid: string,
   pageNumber: number,
   pageSize: number,
   status: string,
@@ -267,7 +258,7 @@ export async function filterTasksbyDateController(
   try {
     const offset = (pageNumber - 1) * pageSize;
     let query = "SELECT * FROM tasks WHERE uid = ?";
-    const queryParams = [decoded.uid];
+    const queryParams: (string | number)[] = [uid];
 
     if (status) {
       query += " AND status = ?";
@@ -280,10 +271,11 @@ export async function filterTasksbyDateController(
     query += " LIMIT ? OFFSET ?";
 
     queryParams.push(pageSize, offset);
+
     const [dataResult] = await db.query<RowDataPacket[]>(db.format(query, queryParams));
 
-    const [totalCountResult]: any = await db.query(
-      db.format("SELECT COUNT(*) as count FROM tasks WHERE uid = ?", [decoded.uid]),
+    const [totalCountResult] = await db.query<RowDataPacket[]>(
+      db.format("SELECT COUNT(*) as count FROM tasks WHERE uid = ?", [uid]),
     );
 
     const tasks = dataResult;
@@ -291,7 +283,6 @@ export async function filterTasksbyDateController(
 
     return { tasks, totalCount };
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }

@@ -3,7 +3,7 @@ import { getResponseTemplate } from "../lib/index.js";
 import { ResponseTemplate } from "../lib/index.js";
 import { CustomRequest } from "../lib/index.js";
 import { getUserInfo, updateUserInfo } from "../db/user.js";
-
+import { UserInfoDTO } from "../lib/index.js";
 export const getUserInfoController = async (req: CustomRequest, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
@@ -18,8 +18,7 @@ export const getUserInfoController = async (req: CustomRequest, res: Response) =
   }
   res.status(result.meta.status).json(result);
 };
-
-export const updateUserInfoController = async (req: CustomRequest, res: Response) => {
+export const updateUserInfoController = async (req: CustomRequest<UserInfoDTO, unknown>, res: Response) => {
   const result = getResponseTemplate();
   try {
     const payload = req.body;

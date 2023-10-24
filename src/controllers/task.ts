@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { getResponseTemplate } from "../lib/index.js";
 import { ResponseTemplate } from "../lib/index.js";
 import {
@@ -11,14 +11,15 @@ import {
   filterTasksbyDateController,
   getTasksByTitle,
 } from "../db/task.js";
-import { CustomRequest, returnResult } from "../lib/index.js";
+import { CustomRequest, returnResult, TaskCreationDTO } from "../lib/index.js";
 
-export const createTaskController = async (req: CustomRequest, res: Response) => {
+export const createTaskController = async (req: CustomRequest<TaskCreationDTO, unknown>, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
     const payload = req.body;
-
-    insertTask(req.decoded, payload);
+    if (req.decoded?.uid) {
+      await insertTask(req.decoded.uid, payload);
+    }
     result.data.message = "Task added successfully";
   } catch (err: any) {
     result.meta.error = {
@@ -29,12 +30,15 @@ export const createTaskController = async (req: CustomRequest, res: Response) =>
   }
   res.status(result.meta.status).json(result);
 };
-
-export const deleteTaskController = async (req: Request, res: Response) => {
+interface TaskDeleteDTO {
+  id: string;
+}
+export const deleteTaskController = async (req: CustomRequest<unknown, TaskDeleteDTO>, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
+  const payload = req.params;
   try {
-    await deleteTask(parseInt(req.params.id));
-    result.data.message = `task  with id-${req.params.id} deleted succesully`;
+    await deleteTask(parseInt(payload.id));
+    result.data.message = `task  with id-${payload.id} deleted succesully`;
   } catch (err: any) {
     result.meta.error = {
       code: err.code || err.errCode || 500,
@@ -44,8 +48,13 @@ export const deleteTaskController = async (req: Request, res: Response) => {
   }
   res.status(result.meta.status).json(result);
 };
-
-export const updateTaskInfoController = async (req: Request, res: Response) => {
+interface TaskUpdateDTO {
+  id: number;
+  title: string;
+  description: string;
+  end_date: string;
+}
+export const updateTaskInfoController = async (req: CustomRequest<TaskUpdateDTO, unknown>, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
     const payload = req.body;
@@ -62,8 +71,11 @@ export const updateTaskInfoController = async (req: Request, res: Response) => {
   }
   res.status(result.meta.status).json(result);
 };
-
-export const updateTaskStatusController = async (req: Request, res: Response) => {
+interface TaskStatusUpdateDTO {
+  status: "todo" | "in progress" | "done";
+  id: number;
+}
+export const updateTaskStatusController = async (req: CustomRequest<TaskStatusUpdateDTO, unknown>, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
     const payload = req.body;
@@ -93,34 +105,40 @@ export const getTasksController = async (req: CustomRequest, res: Response) => {
     const searchValue = req.query.query as string;
     const status = req.query.status as string;
 
-    if (status && !orderBY) {
-      if (status == "todo" || status == "in progress" || status == "done") {
-        const data = await filterTasksbyStatus(req.decoded, page, pageSize, status);
-        returnResult(result, data, page, pageSize);
-      }
-    } else if (searchValue && !orderBY) {
-      const data = await getTasksByTitle(req.decoded, page, pageSize, searchValue);
-
-      returnResult(result, data, page, pageSize);
-    } else if (orderBY) {
-      if (orderBY == "ASC" || orderBY == "DESC") {
-        if (status) {
-          const data = await filterTasksbyDateController(req.decoded, page, pageSize, status, "", orderBY);
-
-          returnResult(result, data, page, pageSize);
-        } else if (searchValue) {
-          const data = await filterTasksbyDateController(req.decoded, page, pageSize, "", searchValue, orderBY);
-
+    if (req.decoded) {
+      if (status && !orderBY) {
+        if (status == "todo" || status == "in progress" || status == "done") {
+          const data = await filterTasksbyStatus(req.decoded.uid, page, pageSize, status);
           returnResult(result, data, page, pageSize);
         } else {
-          const data = await filterTasksbyDateController(req.decoded, page, pageSize, "", "", orderBY);
-          returnResult(result, data, page, pageSize);
+          result.data.message = "Invalid status type";
         }
-      }
-    } else {
-      const data = await getTasks(req.decoded, page, pageSize);
+      } else if (searchValue && !orderBY) {
+        const data = await getTasksByTitle(req.decoded.uid, page, pageSize, searchValue);
 
-      returnResult(result, data, page, pageSize);
+        returnResult(result, data, page, pageSize);
+      } else if (orderBY) {
+        if (orderBY == "ASC" || orderBY == "DESC") {
+          if (status) {
+            const data = await filterTasksbyDateController(req.decoded.uid, page, pageSize, status, "", orderBY);
+
+            returnResult(result, data, page, pageSize);
+          } else if (searchValue) {
+            const data = await filterTasksbyDateController(req.decoded.uid, page, pageSize, "", searchValue, orderBY);
+
+            returnResult(result, data, page, pageSize);
+          } else {
+            const data = await filterTasksbyDateController(req.decoded.uid, page, pageSize, "", "", orderBY);
+            returnResult(result, data, page, pageSize);
+          }
+        } else {
+          result.data.message = "Invalid orderBy type";
+        }
+      } else {
+        const data = await getTasks(req.decoded.uid, page, pageSize);
+
+        returnResult(result, data, page, pageSize);
+      }
     }
   } catch (err: any) {
     result.meta.error = {

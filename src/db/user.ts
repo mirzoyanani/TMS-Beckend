@@ -1,4 +1,5 @@
 import db from "./index.js";
+import { UserInfoDTO } from "../lib/index.js";
 export async function getUserInfo(decoded: any): Promise<object> {
   try {
     const userInfo = (
@@ -8,34 +9,24 @@ export async function getUserInfo(decoded: any): Promise<object> {
     )[0];
     return userInfo;
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }
-interface UserInfo {
-  name: string;
-  surname: string;
-  profilePicture: string;
-  telephone: string;
-}
 
-export async function updateUserInfo(decoded: any, newUserInfo: UserInfo): Promise<boolean> {
+export async function updateUserInfo(decoded: any, newUserInfo: UserInfoDTO): Promise<void> {
   try {
     const { name, surname, profilePicture, telephone } = newUserInfo;
 
-    const updateQuery = db.format("UPDATE users SET name = ?, surname = ?, image = ?, telephone = ? WHERE uid = ?", [
-      name,
-      surname,
-      profilePicture,
-      telephone,
-      decoded.uid,
-    ]);
-
-    await db.query(updateQuery);
-
-    return true;
+    await db.query(
+      db.format("UPDATE users SET name = ?, surname = ?, image = ?, telephone = ? WHERE uid = ?", [
+        name,
+        surname,
+        profilePicture,
+        telephone,
+        decoded.uid,
+      ]),
+    );
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }

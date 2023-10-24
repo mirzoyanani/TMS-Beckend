@@ -1,23 +1,23 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-
-interface CustomRequest extends Request {
-  decoded?: object;
-}
+import { Response, NextFunction } from "express";
+import { ResponseTemplate, verifyToken } from "../lib/index.js";
+import { getResponseTemplate } from "../lib/index.js";
+import { CustomRequest } from "../lib/index.js";
 
 export const authorize = (req: CustomRequest, res: Response, next: NextFunction) => {
+  const result: ResponseTemplate = getResponseTemplate();
   const { token } = req.headers;
 
   if (!token) {
-    return res.status(401).send("Token is missing");
+    return (result.data.message = "Token is missing");
   }
 
   try {
-    const decoded: any = jwt.verify(token as string, process.env.SECRET_KEY as string);
+    const decoded = verifyToken<{ uid: string; code?: string }>(token as string);
     req.decoded = decoded;
 
     next();
-  } catch (error) {
-    return res.status(401).send("Authorization failed: " + (error as Error).message);
+  } catch (e) {
+    const error = e as Error;
+    return res.status(401).send("Authorization failed: " + error.message);
   }
 };

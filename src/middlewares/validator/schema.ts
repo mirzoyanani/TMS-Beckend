@@ -19,11 +19,27 @@ const validationSchemas: ValidationSchemas = {
     email: joi.string().required(),
     password: joi.string().required(),
   }),
+  forget_password: joi.object({
+    email: joi.string().required(),
+  }),
+  check_code: joi.object({
+    code: joi.string().required(),
+  }),
   update: joi.object({
     title: joi.string().required(),
     description: joi.string().required(),
     end_date: joi.string().required(),
     id: joi.number().required(),
+  }),
+  info_update: joi.object({
+    name: joi.string().required(),
+    surname: joi.string().required(),
+    telephone: joi.string().required(),
+  }),
+  task: joi.object({
+    title: joi.string().required(),
+    description: joi.string().required(),
+    end_date: joi.string().required(),
   }),
 };
 

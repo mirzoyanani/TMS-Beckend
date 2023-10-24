@@ -5,13 +5,13 @@ interface StatusesData {
   dataCount: RowDataPacket[];
 }
 
-export async function getStatistics(decoded: any): Promise<StatusesData> {
+export async function getStatistics(uid: string): Promise<StatusesData> {
   try {
     const [dataResult] = await db.query<RowDataPacket[]>(
       db.format(
         `SELECT status FROM tasks 
             WHERE uid = ?`,
-        [decoded.uid],
+        [uid],
       ),
     );
     const [dataCount] = await db.query<RowDataPacket[]>(
@@ -21,7 +21,7 @@ export async function getStatistics(decoded: any): Promise<StatusesData> {
         CAST(SUM(CASE WHEN status = 'in progress' THEN 1 ELSE 0 END) AS SIGNED) AS in_progress_count,
         CAST(SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) AS SIGNED) AS done_count
     FROM tasks where uid  = ?;`,
-        [decoded.uid],
+        [uid],
       ),
     );
 
@@ -29,7 +29,6 @@ export async function getStatistics(decoded: any): Promise<StatusesData> {
 
     return { statuses, dataCount };
   } catch (error) {
-    console.log(error);
-    throw error;
+    throw new Error((error as Error).message);
   }
 }

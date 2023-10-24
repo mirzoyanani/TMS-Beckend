@@ -7,9 +7,11 @@ import { CustomRequest } from "../lib/index.js";
 export const getTasksStatusController = async (req: CustomRequest, res: Response) => {
   const result: ResponseTemplate = getResponseTemplate();
   try {
-    const data = await getStatistics(req.decoded);
-    result.data.items = data.statuses;
-    result.data.statusCounts = data.dataCount;
+    if (req.decoded) {
+      const data = await getStatistics(req.decoded.uid);
+      result.data.items = data.statuses;
+      result.data.statusCounts = data.dataCount;
+    }
   } catch (err: any) {
     result.meta.error = {
       code: err.code || err.errCode || 500,
