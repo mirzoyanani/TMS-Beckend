@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import nodemailer, { Transporter } from "nodemailer";
 import { Request } from "express";
 import jwt from "jsonwebtoken";
+import { RowDataPacket } from "mysql2/promise";
 
 export interface ResponseTemplate {
   meta: {
@@ -48,6 +49,15 @@ interface MailOptions {
   subject: string;
   text: string;
 }
+export interface CorsOptions {
+  origin: string;
+  credentials: boolean;
+}
+interface TaskData {
+  tasks: RowDataPacket[];
+  totalCount: number;
+}
+
 export interface UserInfoDTO {
   uid?: string;
   name: string;
@@ -102,7 +112,7 @@ export const isValidPhoneNumber = (phoneNumber: string): boolean => {
   return phoneNumberPattern.test(phoneNumber);
 };
 
-export function returnResult(result: ResponseTemplate, data: any, page: number, pageSize: number) {
+export function returnResult(result: ResponseTemplate, data: TaskData, page: number, pageSize: number) {
   result.data.items = data.tasks;
   result.data.pagination = {
     currentPage: page,

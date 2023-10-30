@@ -4,12 +4,9 @@ import cors from "cors";
 import path from "path";
 import setupRoutes from "./api/index.js";
 import { SendMessages } from "./controllers/notification.js";
-
+import { CorsOptions } from "cors";
 dotenv.config();
-interface CorsOptions {
-  origin: string;
-  credentials: boolean;
-}
+
 type Port = number | string;
 
 const PORT: Port = process.env.PORT || 9090;

@@ -279,7 +279,7 @@ export async function filterTasksbyDateController(
     );
 
     const tasks = dataResult;
-    const totalCount = totalCountResult[0].count;
+    const totalCount: number = totalCountResult[0].count;
 
     return { tasks, totalCount };
   } catch (error) {

@@ -133,13 +133,12 @@ export const checkCodeController = async (req: CustomRequest<CodeDTO, unknown>, 
     if (!req.decoded || !req.decoded.code) {
       throw new Error("Սխալ հարցում");
     }
-
     const compared = await bcrypt.compare(code, req.decoded.code);
 
     if (!compared) {
       throw _RESET_CODE_IS_WRONG_;
     }
-    const currentUser = await getCurrentUserByEmailorId(req.decoded.uid);
+    const currentUser = await getCurrentUserByEmailorId("", req.decoded.uid);
 
     if (!currentUser) {
       throw { status: 406, message: "Wrong params" };
